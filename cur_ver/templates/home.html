@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Security Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4rem 0; }
+        .demo-card { transition: transform 0.3s ease, box-shadow 0.3s ease; border: none; border-radius: 15px; }
+        .demo-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .nav-link { font-weight: 500; }
+        .warning-card { border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid position-relative">
+            <span class="navbar-text text-white small position-absolute start-0" style="padding-left: 15px;">Matt Sherwood | 22034915</span>
+            <div class="d-flex align-items-center justify-content-center" style="padding-left: 440px;">
+                <h5 class="text-white mb-0 me-4"><i class="fas fa-lock me-2"></i>Web Vulnerabilities Demo</h5>
+                <div class="d-flex">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav">
+                            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/xss">XSS</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/login">SQL Injection</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/scraping">Web Scraping</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="container text-center pl-4">
+            <h1 class="display-4 fw-bold mb-4"><i class="fas fa-lock me-3"></i>Web Vulnerabilities Demo</h1>
+            <p class="lead mb-4">Interactive educational platform demonstrating common web security vulnerabilities</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <p class="mb-0">Learn about XSS, SQL Injection, and Web Scraping through hands-on examples. Understand how these vulnerabilities work and how to prevent them.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container my-5 pl-4">
+        <div class="alert alert-warning warning-card shadow-sm mb-5">
+            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimer</h5>
+            <p class="mb-0"><strong>This website is for educational purposes only.</strong> It demonstrates common web security vulnerabilities to help developers understand and prevent them.</p>
+            <hr>
+            <p class="mb-0"><strong>Never attempt to exploit vulnerabilities on real websites or systems without explicit permission.</strong> Unauthorized testing can be illegal and unethical.</p>
+        </div>
+
+        <h2 class="text-center mb-5 fw-bold">Interactive Demos</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card demo-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-code text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">XSS (Cross-Site Scripting)</h5>
+                        <p class="card-text">Learn how malicious scripts can be injected into web pages viewed by other users.</p>
+                        <a href="/xss" class="btn btn-danger w-100">Try XSS Demo</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card demo-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-database text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">SQL Injection</h5>
+                        <p class="card-text">See how attackers can manipulate database queries to bypass authentication.</p>
+                        <a href="/login" class="btn btn-warning w-100">Try SQL Injection</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card demo-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-spider text-info" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Web Scraping</h5>
+                        <p class="card-text">Understand automated data extraction threats and scraping techniques.</p>
+                        <a href="/scraping" class="btn btn-info w-100">Try Web Scraping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Ethical Guidelines</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Learn, Don't Harm</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Get Permission First</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Report Responsibly</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Follow Laws</li>
+                            <li class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>Practice Defense</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Security Best Practices</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>For Developers:</h6>
+                        <ul class="mb-3">
+                            <li>Use parameterized queries</li>
+                            <li>Validate and sanitize input</li>
+                            <li>Implement proper authentication</li>
+                            <li>Use HTTPS and secure headers</li>
+                        </ul>
+                        <h6>For Organizations:</h6>
+                        <ul class="mb-0">
+                            <li>Web Application Firewalls</li>
+                            <li>Content Security Policy</li>
+                            <li>Regular security audits</li>
+                            <li>Incident response plans</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">Remember: Security is everyone's responsibility. Use your knowledge to protect, not to harm.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Security Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .nav-link { font-weight: 500; }
+        .demo-section { background: #f8f9fa; padding: 2rem 0; margin: 2rem 0; }
+        .code-block { background: #2d3748; color: #e2e8f0; padding: 2rem; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; margin-top: 1rem; }
+        .api-response { background: #f8f9fa; border: 2px solid #6c757d; padding: 1.5rem; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; }
+        .feature-card { transition: transform 0.2s ease; }
+        .feature-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid position-relative">
+            <span class="navbar-text text-white small position-absolute start-0" style="padding-left: 15px;">Matt Sherwood | 22034915</span>
+            <div class="d-flex align-items-center justify-content-center" style="padding-left: 440px;">
+                <h5 class="text-white mb-0 me-4"><i class="fas fa-lock me-2"></i>Web Vulnerabilities Demo</h5>
+                <div class="d-flex">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav">
+                            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/xss">XSS</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/login">SQL Injection</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="/scraping">Web Scraping</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5 pl-4">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="text-center mb-5">
+                    <i class="fas fa-spider text-info" style="font-size: 4rem;"></i>
+                    <h1 class="display-5 fw-bold mt-3">Web Scraping Demo</h1>
+                    <p class="lead text-muted">Learn how automated data extraction threatens web applications</p>
+                </div>
+
+                <div class="alert alert-info mb-5">
+                    <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>About Web Scraping</h5>
+                    <p class="mb-0">Web scraping is the automated extraction of data from websites. While not always malicious, it can be used to steal sensitive data, harvest emails, or compete unfairly.</p>
+                </div>
+
+                <div class="demo-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-user text-danger me-2"></i>Personal Data</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-danger me-2"></i>User profiles and contacts</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Email addresses</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Phone numbers</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Social media data</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-building text-warning me-2"></i>Business Data</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-warning me-2"></i>Product catalogs</li>
+                                <li><i class="fas fa-times text-warning me-2"></i>Pricing information</li>
+                                <li><i class="fas fa-times text-warning me-2"></i>Business metrics</li>
+                                <li><i class="fas fa-times text-warning me-2"></i>News articles</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-5">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>How the Attack Works</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Web scraping uses automated tools to extract data from websites. Attackers write scripts that mimic browser requests to collect information from public web pages and APIs.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-search me-2"></i>Normal Browser Request</h6>
+                                <div class="code-block">
+GET /api/users HTTP/1.1<br>
+Host: example.com<br>
+User-Agent: Mozilla/5.0...
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-spider me-2"></i>Automated Scraping</h6>
+                                <div class="code-block">
+import requests<br>
+response = requests.get('http://example.com/api/users')<br>
+data = response.json()<br>
+# Extract and store all user data
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-3">Scrapers can run 24/7, collecting data at scale. While some scraping is legitimate, malicious scraping can overwhelm servers and steal sensitive information.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <div class="card feature-card shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-globe text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Sample Webpage</h5>
+                                <p class="card-text">View realistic data that scrapers target</p>
+                                <a href="/content" target="_blank" class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt me-2"></i>View Sample Page
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card feature-card shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-code text-success" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">JSON API</h5>
+                                <p class="card-text">Structured data endpoint for scraping</p>
+                                <a href="/data" target="_blank" class="btn btn-success">
+                                    <i class="fas fa-database me-2"></i>View JSON Data
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-5">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-server me-2"></i>Sample API Response</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="api-response">
+{<br>
+&nbsp;&nbsp;"users": ["admin", "user", "guest"],<br>
+&nbsp;&nbsp;"sensitive_data": "This data could be scraped by bots",<br>
+&nbsp;&nbsp;"api_version": "1.0",<br>
+&nbsp;&nbsp;"endpoints": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"users": "/api/users",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"products": "/api/products",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"news": "/api/news"<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;"metadata": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"total_users": 3,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"last_updated": "2024-01-24",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"security_note": "This data is publicly accessible and could be scraped"<br>
+&nbsp;&nbsp;}<br>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fab fa-python me-2"></i>HTML Scraping Example</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="code-block">
+def scrape_html_example():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;import requests<br>
+&nbsp;&nbsp;&nbsp;&nbsp;from bs4 import BeautifulSoup<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get('http://localhost:5000/content')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;soup = BeautifulSoup(response.text, 'html.parser')<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;users = soup.find_all('div', class_='user-card')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for user in users:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name = user.find('h3').text<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;email = user.find('p').text.replace('Email: ', '')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(f"{name}: {email}")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-code me-2"></i>JSON API Scraping</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="code-block">
+def scrape_json_example():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;import requests<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get('http://localhost:5000/data')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data = response.json()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print("Users:", data['users'])<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print("Data:", data['sensitive_data'])
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-play-circle me-2"></i>Try It Live!</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-3">See the Python scraping code execute in real-time and view the extracted data.</p>
+                        <a href="/scrape-content" class="btn btn-warning btn-lg">
+                            <i class="fas fa-rocket me-2"></i>Run Live Scraping Demo
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-bug me-2"></i>Risks & Threats</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Data theft and privacy violations</li>
+                                    <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Unfair competition</li>
+                                    <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Terms of service violations</li>
+                                    <li class="mb-2"><i class="fas fa-times text-danger me-2"></i>Server overload and DoS</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Protection Strategies</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Authentication & authorization</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Rate limiting</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>CAPTCHAs for suspicious activity</li>
+                                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>robots.txt guidance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-4">
+                    <h5 class="alert-heading"><i class="fas fa-graduation-cap me-2"></i>Educational Note</h5>
+                    <p class="mb-0">This demo shows how scraping works. In practice, always respect website terms of service, robots.txt files, and applicable laws.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Security Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .nav-link { font-weight: 500; }
+        .demo-section { background: #f8f9fa; padding: 2rem 0; margin: 2rem 0; }
+        .code-block { background: #2d3748; color: #e2e8f0; padding: 2rem; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; margin-top: 1rem; }
+        .result-card { border-left: 4px solid #dc3545; }
+        .example-card { transition: transform 0.2s ease; }
+        .example-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid position-relative">
+            <span class="navbar-text text-white small position-absolute start-0" style="padding-left: 15px;">Matt Sherwood | 22034915</span>
+            <div class="d-flex align-items-center justify-content-center" style="padding-left: 440px;">
+                <h5 class="text-white mb-0 me-4"><i class="fas fa-lock me-2"></i>Web Vulnerabilities Demo</h5>
+                <div class="d-flex">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav">
+                            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="/xss">XSS</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/login">SQL Injection</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/scraping">Web Scraping</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5 pl-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="text-center mb-5">
+                    <i class="fas fa-code text-danger" style="font-size: 4rem;"></i>
+                    <h1 class="display-5 fw-bold mt-3">XSS (Cross-Site Scripting) Demo</h1>
+                    <p class="lead text-muted">Learn how malicious scripts can be injected into web pages</p>
+                </div>
+
+                <div class="alert alert-info mb-5">
+                    <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>About XSS (Cross-Site Scripting)</h5>
+                    <p class="mb-3">Cross-Site Scripting (XSS) is a web security vulnerability that allows attackers to inject malicious client-side scripts into web pages viewed by other users. This occurs when web applications fail to properly sanitize user input before displaying it in HTML pages.</p>
+                    <p class="mb-3"><strong>How XSS Works:</strong> Attackers inject malicious JavaScript code into trusted websites. When other users visit these pages, their browsers execute the injected scripts, potentially stealing cookies, session tokens, or other sensitive information.</p>
+                    <p class="mb-3"><strong>Types of XSS:</strong></p>
+                    <ul class="mb-3">
+                        <li><strong>Reflected XSS:</strong> Malicious script is reflected off a web server (e.g., in search results or error messages)</li>
+                        <li><strong>Stored XSS:</strong> Malicious script is permanently stored on the target server (e.g., in databases, comments, or user profiles)</li>
+                        <li><strong>DOM-based XSS:</strong> Vulnerability exists in client-side code rather than server-side code</li>
+                    </ul>
+                    <p class="mb-0"><strong>Potential Impacts:</strong> Session hijacking, cookie theft, keylogging, phishing, website defacement, and malware distribution. XSS remains one of the most common web application vulnerabilities according to OWASP Top 10.</p>
+                </div>
+
+                <div class="demo-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-bug text-danger me-2"></i>Vulnerability</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-times text-danger me-2"></i>Stealing cookies and session tokens</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Defeating CSRF protection</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Performing actions on behalf of users</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>Redirecting users to malicious sites</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-shield-alt text-success me-2"></i>Prevention</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Escape user input</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Use Content Security Policy</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Validate and sanitize input</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Use safe templating</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-5">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>How the Attack Works</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">XSS attacks work by injecting malicious JavaScript code into web pages that other users will view. The browser executes this code as if it were part of the legitimate website.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mt-4"><i class="fas fa-search me-2"></i>Normal HTML Output</h6>
+                                <div class="code-block">
+&lt;div&gt;Hello, user!&lt;/div&gt;
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mt-4"><i class="fas fa-exclamation-triangle me-2"></i>XSS-Infected Output</h6>
+                                <div class="code-block">
+&lt;div&gt;Hello, &lt;script&gt;alert('XSS!')&lt;/script&gt;!&lt;/div&gt;
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-3">When the browser renders the infected HTML, it executes the malicious script, potentially stealing cookies or performing actions on behalf of the user.</p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-5">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Interactive XSS Demo</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="mb-4">
+                            <div class="input-group">
+                                <input type="text" name="input" class="form-control form-control-lg"
+                                       placeholder="Enter something to test XSS..." value="{{ user_input }}">
+                                <button class="btn btn-danger btn-lg" type="submit">
+                                    <i class="fas fa-play me-2"></i>Submit
+                                </button>
+                            </div>
+                        </form>
+
+                        {% if user_input %}
+                        <div class="alert alert-danger result-card">
+                            <h5 class="alert-heading"><i class="fas fa-eye me-2"></i>Result</h5>
+                            <p><strong>Your input:</strong> <code>{{ user_input }}</code></p>
+                            <p><strong>Rendered HTML:</strong></p>
+                            <div class="border p-3 bg-light rounded">{{ user_input|safe }}</div>
+                            <hr>
+                            <p class="mb-0"><strong>⚠️ Warning:</strong> The content above is rendered as HTML. If you entered JavaScript, it may have executed!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card example-card shadow-sm h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-lightbulb text-warning me-2"></i>Example 1: Normal Input</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Enter normal text to see how it displays.</p>
+                                <button class="btn btn-outline-primary btn-sm w-100"
+                                        onclick="document.querySelector('input[name=input]').value='Hello World';">
+                                    Fill: Hello World
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card example-card shadow-sm h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Example 2: XSS Alert</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Inject a script that shows an alert box.</p>
+                                <button class="btn btn-outline-danger btn-sm w-100"
+                                        onclick="document.querySelector('input[name=input]').value='<script>alert(\'XSS Attack!\');</script>';">
+                                    Fill: XSS Alert
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card example-card shadow-sm h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-cookie-bite text-warning me-2"></i>Example 3: Cookie Theft</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Simulated cookie theft attack.</p>
+                                <button class="btn btn-outline-warning btn-sm w-100"
+                                        onclick="document.querySelector('input[name=input]').value='<script>alert(\'Cookie: \' + document.cookie);</script>';">
+                                    Fill: Cookie Theft
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card example-card shadow-sm h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-code text-info me-2"></i>Example 4: HTML Injection</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small">Inject HTML to change page appearance.</p>
+                                <button class="btn btn-outline-info btn-sm w-100"
+                                        onclick="document.querySelector('input[name=input]').value='<h1 style=\'color:red\'>HACKED!</h1><img src=x onerror=alert(\'XSS\')>';">
+                                    Fill: HTML Injection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0"><i class="fas fa-times-circle me-2"></i>Vulnerable Code</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="code-block">
+if request.method == 'POST':<br>
+&nbsp;&nbsp;&nbsp;&nbsp;user_input = request.form.get('input', '')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return f"&lt;h1&gt;XSS Demo&lt;/h1&gt;...{user_input}..."
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Safe Alternative</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="code-block">
+from markupsafe import escape<br>
+<br>
+if request.method == 'POST':<br>
+&nbsp;&nbsp;&nbsp;&nbsp;user_input = request.form.get('input', '')<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return f"&lt;p&gt;Your input: {escape(user_input)}&lt;/p&gt;"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Maintain scroll position after form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if there's a scroll position stored in sessionStorage
+            const scrollPosition = sessionStorage.getItem('scrollPosition');
+            if (scrollPosition) {
+                window.scrollTo(0, parseInt(scrollPosition));
+                sessionStorage.removeItem('scrollPosition');
+            }
+
+            // Store scroll position before form submission
+            document.querySelector('form').addEventListener('submit', function() {
+                sessionStorage.setItem('scrollPosition', window.scrollY);
+            });
+        });
+    </script>
+</body>
+</html>
