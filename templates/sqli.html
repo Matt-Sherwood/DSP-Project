@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal">
+  <p class="kicker">Mission 1</p>
+  <h1>SQL Injection: break it, then defend it</h1>
+  <p>
+    In plain terms: if user text is glued into SQL, the user can change the meaning of the query.
+    Your mission is to prove that in vulnerable mode, then prove why safe mode blocks it.
+  </p>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Interactive Terminal</h2>
+  <p>Type commands exactly like a real tool workflow.</p>
+  <div class="terminal-shell" id="sqli-shell" data-tool="sqli">
+    <div class="terminal-output"></div>
+    <div class="terminal-input-row">
+      <span class="prompt">sqli$</span>
+      <input class="terminal-input" placeholder="help" />
+      <button class="btn terminal-run" type="button">Run</button>
+      <button class="btn ghost terminal-clear" type="button">Clear</button>
+    </div>
+  </div>
+  <div class="chip-row">
+    <button class="chip" data-terminal-target="sqli-shell" data-command="show-users">show-users</button>
+    <button
+      class="chip"
+      data-terminal-target="sqli-shell"
+      data-command="unsafe-login --username &quot;admin&#39; OR &#39;1&#39;=&#39;1&quot; --password &quot;x&quot;"
+    >
+      Test Vulnerable Login
+    </button>
+    <button
+      class="chip"
+      data-terminal-target="sqli-shell"
+      data-command="safe-login --username &quot;admin&#39; OR &#39;1&#39;=&#39;1&quot; --password &quot;x&quot;"
+    >
+      Test Safe Login
+    </button>
+  </div>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Show You Understand</h2>
+  <p>
+    Write what changed between vulnerable and safe mode. Explain cause and evidence.
+  </p>
+  <form class="challenge-form" data-lesson="sqli">
+    <label>Your name</label>
+    <input name="learner_name" placeholder="Your name" />
+    <label>Your explanation</label>
+    <textarea
+      name="answer"
+      rows="5"
+      placeholder="Example: In vulnerable mode, my input changed query logic because text was concatenated into SQL. In safe mode, placeholders treated it as data, so no bypass happened."
+    ></textarea>
+    <button class="btn" type="submit">Submit Reflection</button>
+    <p class="challenge-result"></p>
+  </form>
+</section>
+{% endblock %}

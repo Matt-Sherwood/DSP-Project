@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal">
+  <p class="kicker">Tool Simulation Studio</p>
+  <h1>Realistic Terminal Emulation</h1>
+  <p>
+    Use this console like a real engagement workflow. Switch tool profiles, run commands, and read structured
+    outputs. Every command is logged in the live database.
+  </p>
+</section>
+
+<section class="terminal-layout reveal stagger">
+  <article class="panel">
+    <h2>Ops Console</h2>
+    <label>Tool profile</label>
+    <select id="terminal-tool-select" class="select">
+      <option value="sqli">sqli</option>
+      <option value="xss">xss</option>
+      <option value="scrape">scrape</option>
+      <option value="sqlmap">sqlmap</option>
+      <option value="db">db</option>
+    </select>
+
+    <div class="terminal-shell terminal-shell-large" id="global-shell" data-tool="sqli">
+      <div class="terminal-output"></div>
+      <div class="terminal-input-row">
+        <span class="prompt">sqli$</span>
+        <input class="terminal-input" placeholder="help" />
+        <button class="btn terminal-run" type="button">Run</button>
+        <button class="btn ghost terminal-clear" type="button">Clear</button>
+      </div>
+    </div>
+
+    <p class="hint-line">
+      Tip: Use <strong>use db</strong> or <strong>use sqli</strong> to switch profiles from inside the terminal too.
+    </p>
+  </article>
+
+  <article class="panel">
+    <h2>Command Reference</h2>
+    <div class="reference-block">
+      <h3>SQLi profile</h3>
+      <p>show-users</p>
+      <p>unsafe-login --username "admin' OR '1'='1" --password "x"</p>
+      <p>safe-login --username "admin' OR '1'='1" --password "x"</p>
+    </div>
+
+    <div class="reference-block">
+      <h3>XSS profile</h3>
+      <p>post-comment --author "Student" --content "&lt;script&gt;alert(1)&lt;/script&gt;"</p>
+      <p>render --mode unsafe</p>
+      <p>render --mode safe</p>
+    </div>
+
+    <div class="reference-block">
+      <h3>Scrape profile</h3>
+      <p>scrape --selector "article.item h3" --attribute text</p>
+      <p>scrape --selector "article.item" --attribute data-sku</p>
+    </div>
+
+    <div class="reference-block">
+      <h3>DB profile</h3>
+      <p>tables</p>
+      <p>select --table users --search admin --sort username --order asc --limit 5</p>
+      <p>select --table activity_log --sort id --order desc --limit 10</p>
+    </div>
+  </article>
+</section>
+{% endblock %}

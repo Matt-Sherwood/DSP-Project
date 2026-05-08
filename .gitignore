@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+training_lab.db
+continuous_validation/reports/

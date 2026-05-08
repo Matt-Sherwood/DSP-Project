@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-panel reveal">
+  <p class="kicker">Interactive Security Studio</p>
+  <h1>Build skill by doing, then prove you understand what happened.</h1>
+  <p>
+    This project is now a complete learning system: live labs, realistic terminal commands, and an admin data view.
+    You test behavior, explain it in your own words, and track progress across all lessons.
+  </p>
+  <div class="action-row">
+    <a class="btn" href="{{ url_for('terminal_page') }}">Open Terminal Emulator</a>
+    <a class="btn ghost" href="{{ url_for('admin_page') }}">Open Live Admin View</a>
+  </div>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>How This Training Works</h2>
+  <div class="steps-grid">
+    <article class="step-card">
+      <h3>1. Test</h3>
+      <p>Run commands and experiments in each lab.</p>
+    </article>
+    <article class="step-card">
+      <h3>2. Observe</h3>
+      <p>Read output, compare unsafe and safe behavior, inspect database changes.</p>
+    </article>
+    <article class="step-card">
+      <h3>3. Explain</h3>
+      <p>Submit a short reflection. The app scores it and tracks your progress.</p>
+    </article>
+  </div>
+</section>
+
+<section class="panel reveal stagger" id="progress-panel">
+  <h2>Your Demonstrated Understanding</h2>
+  <p class="hint-line">
+    Pass each lesson by scoring at least 60% on the reflection check.
+  </p>
+  <div class="progress-grid" id="progress-cards"></div>
+  <p class="status-line" id="progress-summary">Loading progress...</p>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Learning Missions</h2>
+  <div class="mission-grid">
+    <a class="mission-card" href="{{ url_for('sqli_page') }}">
+      <h3>Mission 1: SQL Injection</h3>
+      <p>Make a vulnerable login behave incorrectly, then stop it with placeholders.</p>
+    </a>
+    <a class="mission-card" href="{{ url_for('xss_page') }}">
+      <h3>Mission 2: XSS</h3>
+      <p>Store a payload, compare unsafe rendering and escaped rendering.</p>
+    </a>
+    <a class="mission-card" href="{{ url_for('scraping_page') }}">
+      <h3>Mission 3: Scraping</h3>
+      <p>Extract only the intended values using precise selectors.</p>
+    </a>
+    <a class="mission-card" href="{{ url_for('sqlmap_page') }}">
+      <h3>Mission 4: SQLMap</h3>
+      <p>Interpret command output and choose a defensive fix.</p>
+    </a>
+  </div>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Glossary in Plain Language</h2>
+  <div class="glossary-grid">
+    {% for item in glossary %}
+    <article class="glossary-card">
+      <h3>{{ item.term }}</h3>
+      <p>{{ item.meaning }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

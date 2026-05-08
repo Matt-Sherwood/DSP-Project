@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal">
+  <p class="kicker">Mission 3</p>
+  <h1>Web Scraping: extract the exact field you need</h1>
+  <p>
+    Scraping is structured reading of page content. Your goal is precision: get the right values,
+    not just any values.
+  </p>
+</section>
+
+<section class="split reveal stagger">
+  <article class="panel">
+    <h2>Target HTML</h2>
+    <pre class="code-block">{{ target_html }}</pre>
+  </article>
+
+  <article class="panel">
+    <h2>Terminal Workflow</h2>
+    <div class="terminal-shell" id="scrape-shell" data-tool="scrape">
+      <div class="terminal-output"></div>
+      <div class="terminal-input-row">
+        <span class="prompt">scrape$</span>
+        <input class="terminal-input" placeholder="help" />
+        <button class="btn terminal-run" type="button">Run</button>
+        <button class="btn ghost terminal-clear" type="button">Clear</button>
+      </div>
+    </div>
+    <div class="chip-row">
+      <button
+        class="chip"
+        data-terminal-target="scrape-shell"
+        data-command="scrape --selector &quot;article.item h3&quot; --attribute text"
+      >
+        Extract Names
+      </button>
+      <button
+        class="chip"
+        data-terminal-target="scrape-shell"
+        data-command="scrape --selector &quot;article.item&quot; --attribute data-sku"
+      >
+        Extract SKUs
+      </button>
+    </div>
+  </article>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Show You Understand</h2>
+  <form class="challenge-form" data-lesson="scraping">
+    <label>Your name</label>
+    <input name="learner_name" placeholder="Your name" />
+    <label>Your explanation</label>
+    <textarea
+      name="answer"
+      rows="5"
+      placeholder="Explain why selector precision matters and how attributes help extract structured values."
+    ></textarea>
+    <button class="btn" type="submit">Submit Reflection</button>
+    <p class="challenge-result"></p>
+  </form>
+</section>
+{% endblock %}

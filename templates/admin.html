@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal" id="admin-view">
+  <p class="kicker">Data Operations</p>
+  <h1>Live Database View</h1>
+  <p>
+    This is a real view over the training database. Filter, sort, search, and page through records without editing raw
+    SQL by hand.
+  </p>
+</section>
+
+<section class="stats-grid reveal stagger" id="admin-stats"></section>
+
+<section class="panel reveal stagger">
+  <h2>Record Explorer</h2>
+  <div class="admin-controls">
+    <label>
+      Table
+      <select id="admin-table" class="select"></select>
+    </label>
+
+    <label>
+      Search
+      <input id="admin-search" placeholder="Search text" />
+    </label>
+
+    <label>
+      Filter column
+      <select id="admin-filter-column" class="select"></select>
+    </label>
+
+    <label>
+      Filter value
+      <input id="admin-filter-value" placeholder="Optional" />
+    </label>
+
+    <label>
+      Sort by
+      <select id="admin-sort-by" class="select"></select>
+    </label>
+
+    <label>
+      Direction
+      <select id="admin-sort-dir" class="select">
+        <option value="asc">asc</option>
+        <option value="desc">desc</option>
+      </select>
+    </label>
+
+    <label>
+      Rows per page
+      <select id="admin-per-page" class="select">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </label>
+
+    <button class="btn" id="admin-apply" type="button">Apply</button>
+  </div>
+
+  <p class="status-line" id="admin-meta">Loading table metadata...</p>
+
+  <div class="table-wrap">
+    <table id="admin-table-grid">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="pagination-row">
+    <button class="btn ghost" id="admin-prev" type="button">Previous</button>
+    <span id="admin-page-status">Page 1</span>
+    <button class="btn ghost" id="admin-next" type="button">Next</button>
+  </div>
+</section>
+{% endblock %}

@@ -1,50 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Web Security Demo{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .nav-link { font-weight: 500; }
-        {% block styles %}{% endblock %}
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container-fluid position-relative">
-            <span class="navbar-text text-white small position-absolute start-0" style="padding-left: 15px;">Matt Sherwood | 22034915</span>
-            <div class="d-flex align-items-center justify-content-center" style="padding-left: 440px;">
-                <h5 class="text-white mb-0 me-4"><i class="fas fa-lock me-2"></i>Web Vulnerabilities Demo</h5>
-                <div class="d-flex">
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav">
-                            <li class="nav-item"><a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="/">Home</a></li>
-                            <li class="nav-item"><a class="nav-link {% if active_page == 'tutorial' %}active{% endif %}" href="/tutorial">Tutorial</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Defender Ops Learning Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Azeret+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body data-route="{{ request.path }}">
+    <div class="backdrop-glow"></div>
+    <div class="grid-texture"></div>
 
-    {% block content %}{% endblock %}
+    <header class="site-header">
+      <a href="{{ url_for('index') }}" class="brand">
+        <span class="brand-title">Defender Ops Lab</span>
+        <span class="brand-sub">Learn by testing and proving your understanding</span>
+      </a>
+      <nav class="nav-links">
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('learner_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('sqli_page') }}">SQLi</a>
+        <a href="{{ url_for('xss_page') }}">XSS</a>
+        <a href="{{ url_for('scraping_page') }}">Scraping</a>
+        <a href="{{ url_for('sqlmap_page') }}">SQLMap</a>
+        <a href="{{ url_for('terminal_page') }}">Terminal</a>
+        <a href="{{ url_for('admin_page') }}">Database View</a>
+      </nav>
+    </header>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.js-progress-bar').forEach(function(bar) {
-                const raw = bar.getAttribute('data-progress');
-                const value = Number.parseInt(raw, 10);
-                const safe = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
-                bar.style.width = safe + '%';
-            });
-        });
-    </script>
+    <main class="page-shell">{% block content %}{% endblock %}</main>
+
+    <footer class="site-footer">
+      <p>
+        Local defensive training only. Never test systems without explicit permission.
+      </p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
     {% block scripts %}{% endblock %}
-</body>
+  </body>
 </html>

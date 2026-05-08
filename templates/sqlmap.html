@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal">
+  <p class="kicker">Mission 4</p>
+  <h1>SQLMap Concepts: read evidence and choose a defensive fix</h1>
+  <p>
+    This simulator teaches command thinking and output reading in a safe local setting.
+    Your target is understanding, not exploitation.
+  </p>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Terminal Practice</h2>
+  <div class="terminal-shell" id="sqlmap-shell" data-tool="sqlmap">
+    <div class="terminal-output"></div>
+    <div class="terminal-input-row">
+      <span class="prompt">sqlmap$</span>
+      <input class="terminal-input" placeholder="help" />
+      <button class="btn terminal-run" type="button">Run</button>
+      <button class="btn ghost terminal-clear" type="button">Clear</button>
+    </div>
+  </div>
+  <div class="chip-row">
+    <button
+      class="chip"
+      data-terminal-target="sqlmap-shell"
+      data-command="sqlmap -u http://127.0.0.1:5000/api/sqli/unsafe-login?username=t&password=t -p username --batch"
+    >
+      Run Focused Scan
+    </button>
+    <button
+      class="chip"
+      data-terminal-target="sqlmap-shell"
+      data-command="sqlmap -u http://127.0.0.1:5000/api/sqli/safe-login?username=t&password=t -p username --batch"
+    >
+      Compare Safer Endpoint
+    </button>
+  </div>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Show You Understand</h2>
+  <form class="challenge-form" data-lesson="sqlmap">
+    <label>Your name</label>
+    <input name="learner_name" placeholder="Your name" />
+    <label>Your explanation</label>
+    <textarea
+      name="answer"
+      rows="5"
+      placeholder="Explain what parameter was tested, what evidence appeared, and which defensive code change should happen first."
+    ></textarea>
+    <button class="btn" type="submit">Submit Reflection</button>
+    <p class="challenge-result"></p>
+  </form>
+</section>
+{% endblock %}

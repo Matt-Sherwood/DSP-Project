@@ -1,345 +1,428 @@
+from training_app import main
+
+if __name__ == "__main__":
+    main()
+
+'''
+
+from __future__ import annotations
+
+import datetime as dt
 import os
-import html
 import re
+import secrets
+import shlex
+import sqlite3
+from pathlib import Path
+from typing import Any
 
-from flask import Flask, redirect, render_template, request, session, url_for
-
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-me')
-
-
-TUTORIAL_STEPS = [
-    {
-        'id': 'intro',
-        'title': 'Welcome',
-        'subtitle': 'How this tutorial works',
-    },
-    {
-        'id': 'xss',
-        'title': 'XSS',
-        'subtitle': 'What it is, why it executes, and how to stop it',
-    },
-    {
-        'id': 'sqli',
-        'title': 'SQL Injection',
-        'subtitle': 'How query structure gets hijacked by user input',
-    },
-    {
-        'id': 'scraping',
-        'title': 'Web Scraping',
-        'subtitle': 'Why exposed data is still risky and how to reduce abuse',
-    },
-    {
-        'id': 'wrapup',
-        'title': 'Wrap-up',
-        'subtitle': 'Key takeaways and what to do next',
-    },
-]
+from bs4 import BeautifulSoup
+from flask import Flask, jsonify, render_template, request
+from markupsafe import escape
 
 
-def _get_step_index(step_id: str) -> int:
-    for index, step in enumerate(TUTORIAL_STEPS):
-        if step['id'] == step_id:
-            return index
-    return -1
+BASE_DIR = Path(__file__).resolve().parent
+*** End Patch
+@app.route("/api/db/comments")
+def api_comments_raw() -> Any:
+    conn = get_connection()
+    comments = conn.execute(
+        "SELECT id, author, content, created_at, is_flagged FROM comments ORDER BY id DESC"
+    ).fetchall()
+    conn.close()
+    return jsonify(_rows_to_dicts(comments))
 
 
-def _get_tutorial_state() -> dict:
-    visited = set(session.get('tutorial_visited', []))
-    total = len(TUTORIAL_STEPS)
-    progress_count = len(visited.intersection({s['id'] for s in TUTORIAL_STEPS}))
-    progress_percent = int((progress_count / total) * 100) if total else 0
-    return {
-        'visited': visited,
-        'progress_count': progress_count,
-        'total_steps': total,
-        'progress_percent': progress_percent,
-    }
+@app.route("/api/sqli/unsafe-login", methods=["POST"])
+def api_sqli_unsafe_login() -> Any:
+    data = request.get_json(force=True)
+    username = str(data.get("username", ""))
+    password = str(data.get("password", ""))
+
+    result = _run_unsafe_login(username, password)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
 
 
-def _mark_step_visited(step_id: str) -> None:
-    visited = set(session.get('tutorial_visited', []))
-    visited.add(step_id)
-    session['tutorial_visited'] = sorted(visited)
+@app.route("/api/sqli/safe-login", methods=["POST"])
+def api_sqli_safe_login() -> Any:
+    data = request.get_json(force=True)
+    username = str(data.get("username", ""))
+    password = str(data.get("password", ""))
+    return jsonify(_run_safe_login(username, password))
 
 
-def _tutorial_xss_context() -> dict:
-    payload = ''
-    sink = 'innerHTML'
-    analysis = None
+@app.route("/api/xss/post", methods=["POST"])
+def api_xss_post() -> Any:
+    data = request.get_json(force=True)
+    author = str(data.get("author", "Anonymous")).strip()[:40] or "Anonymous"
+    content = str(data.get("content", "")).strip()[:400]
 
-    if request.method == 'POST':
-        payload = request.form.get('payload', '')
-        sink = request.form.get('sink', 'innerHTML')
-        lower_payload = payload.lower()
+    if not content:
+        return jsonify({"ok": False, "message": "Comment cannot be empty."}), 400
 
-        indicators = [
-            ('<script', 'Contains a script tag.'),
-            ('onerror=', 'Contains an inline event handler.'),
-            ('onload=', 'Contains an inline event handler.'),
-            ('javascript:', 'Contains a javascript: URL.'),
-            ('document.cookie', 'Attempts to access cookies.'),
-            ('<img', 'Injects an HTML element.'),
-            ('<svg', 'Injects an SVG element.'),
-        ]
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO comments (author, content, created_at, is_flagged) VALUES (?, ?, ?, ?)",
+        (author, content, utc_now(), 1 if "<script" in content.lower() else 0),
+    )
+    conn.commit()
+    conn.close()
 
-        hits = [message for token, message in indicators if token in lower_payload]
-        risk_score = 10
-        risk_score += 20 if sink == 'innerHTML' else 5
-        risk_score += min(len(hits) * 15, 60)
+    return jsonify({"ok": True, "message": "Comment stored. Now compare unsafe and safe rendering."})
 
-        if risk_score >= 70:
-            risk_level = 'High'
-        elif risk_score >= 40:
-            risk_level = 'Medium'
-        else:
-            risk_level = 'Low'
 
-        analysis = {
-            'hits': hits,
-            'risk_level': risk_level,
-            'unsafe_output': f"<div class='comment'>{payload}</div>",
-            'safe_output': f"<div class='comment'>{html.escape(payload)}</div>",
-            'browser_flow': [
-                'Server places user input into HTML response.',
-                'Browser parses tags/attributes, not just text.',
-                'If JavaScript is present in executable context, it runs.',
-                'Attacker code executes with the victim\'s session privileges.',
-            ],
-            'why_it_works': 'Browsers trust page markup by default, and unsafe sinks treat input as code rather than plain text.',
+@app.route("/api/xss/render")
+def api_xss_render() -> Any:
+    mode = request.args.get("mode", "unsafe").strip().lower()
+    if mode not in {"safe", "unsafe"}:
+        return jsonify({"ok": False, "message": "mode must be safe or unsafe"}), 400
+    return jsonify(_render_comments(mode))
+
+
+@app.route("/api/scrape/run", methods=["POST"])
+def api_scrape_run() -> Any:
+    data = request.get_json(force=True)
+    selector = str(data.get("selector", "")).strip()
+    attribute = str(data.get("attribute", "text")).strip() or "text"
+
+    if not selector:
+        return jsonify({"ok": False, "message": "Please provide a CSS selector."}), 400
+
+    return jsonify(_run_scrape(selector, attribute))
+
+
+@app.route("/api/sqlmap/simulate", methods=["POST"])
+def api_sqlmap_simulate() -> Any:
+    data = request.get_json(force=True)
+    command = str(data.get("command", "")).strip()
+    if not command:
+        return jsonify({"ok": False, "message": "Please enter a SQLMap command."}), 400
+
+    result = _simulate_sqlmap(command)
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
+
+
+@app.route("/api/sqlmap/example")
+def api_sqlmap_example() -> Any:
+    command = (
+        "sqlmap -u http://127.0.0.1:5000/api/sqli/unsafe-login?username=test&password=test "
+        "-p username --batch --risk=1 --level=2"
+    )
+    explanation = (
+        "This practice command targets the local training endpoint and one parameter. "
+        "Never run SQLMap on systems without explicit authorization."
+    )
+    return jsonify({"command": command, "explanation": explanation})
+
+
+@app.route("/api/challenge/submit", methods=["POST"])
+def api_challenge_submit() -> Any:
+    data = request.get_json(force=True)
+    lesson_slug = str(data.get("lesson_slug", "")).strip().lower()
+    learner_name = str(data.get("learner_name", "Learner")).strip()[:60] or "Learner"
+    learner_key = str(data.get("learner_key", "")).strip()
+    answer = str(data.get("answer", "")).strip()[:1200]
+
+    if lesson_slug not in LESSON_RUBRICS:
+        return jsonify({"ok": False, "message": "Unknown lesson."}), 400
+    if len(answer.split()) < 5:
+        return jsonify({"ok": False, "message": "Please write a fuller explanation before submitting."}), 400
+
+    if not learner_key:
+        learner_key = _slugify_learner_name(learner_name)
+
+    score, passed, feedback = _score_reflection(lesson_slug, answer)
+    conn = get_connection()
+
+    conn.execute(
+        "INSERT OR IGNORE INTO learners (learner_key, display_name, created_at, last_seen_at) VALUES (?, ?, ?, ?)",
+        (learner_key, learner_name, utc_now(), utc_now()),
+    )
+
+    conn.execute(
+        """
+        INSERT INTO challenge_submissions (lesson_slug, learner_key, learner_name, answer, score, passed, feedback, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (lesson_slug, learner_key, learner_name, answer, score, 1 if passed else 0, feedback, utc_now()),
+    )
+
+    conn.execute(
+        "UPDATE learners SET last_seen_at = ? WHERE learner_key = ?",
+        (utc_now(), learner_key),
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(
+        {
+            "ok": True,
+            "lesson_slug": lesson_slug,
+            "learner_key": learner_key,
+            "score": score,
+            "passed": passed,
+            "feedback": feedback,
         }
-
-    return {
-        'payload': payload,
-        'sink': sink,
-        'analysis': analysis,
-    }
+    )
 
 
-def _tutorial_sqli_context() -> dict:
-    username = ''
-    password = ''
-    analysis = None
+@app.route("/api/learner/register", methods=["POST"])
+def api_learner_register() -> Any:
+    data = request.get_json(force=True)
+    learner_name = str(data.get("learner_name", "Learner")).strip()[:60] or "Learner"
+    learner_key = str(data.get("learner_key", "")).strip()
 
-    if request.method == 'POST':
-        username = request.form.get('username', '')
-        password = request.form.get('password', '')
+    if not learner_name or len(learner_name) < 2:
+        return jsonify({"ok": False, "message": "Please enter a name with at least 2 characters."}), 400
 
-        vulnerable_query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}';"
-        safe_query = "SELECT * FROM users WHERE username = ? AND password = ?;"
+    if not learner_key:
+        learner_key = _slugify_learner_name(learner_name)
 
-        combined = f"{username} {password}"
-        combined_lower = combined.lower()
-        signal_rules = [
-            (r"\bor\b\s*['\"]?\d+['\"]?\s*=\s*['\"]?\d+", 'Boolean logic was injected (tautology pattern).'),
-            (r"--", 'SQL comment marker detected, which can ignore the rest of a query.'),
-            (r"\bunion\b", 'UNION keyword detected, often used to extract additional data.'),
-            (r";", 'Statement separator detected, which can chain extra commands.'),
-            (r"\bselect\b", 'Unexpected SELECT keyword present in user input.'),
-        ]
+    conn = get_connection()
 
-        detected_signals = []
-        for pattern, message in signal_rules:
-            if re.search(pattern, combined_lower):
-                detected_signals.append(message)
-
-        valid_credentials = (username == 'admin' and password == 'password')
-        injection_markers = ["' or '1'='1", '" or "1"="1', '--']
-        vulnerable_grants_access = valid_credentials or any(
-            marker in combined_lower for marker in injection_markers
+    existing = conn.execute("SELECT learner_key FROM learners WHERE learner_key = ?", (learner_key,)).fetchone()
+    if existing:
+        conn.close()
+        return jsonify(
+            {
+                "ok": True,
+                "learner_key": learner_key,
+                "display_name": learner_name,
+                "message": "Welcome back!",
+                "is_returning": True,
+            }
         )
 
-        analysis = {
-            'vulnerable_query': vulnerable_query,
-            'safe_query': safe_query,
-            'detected_signals': detected_signals,
-            'vulnerable_result': 'Access granted' if vulnerable_grants_access else 'Access denied',
-            'safe_result': 'Access granted' if valid_credentials else 'Access denied',
-            'how_it_works': [
-                'App concatenates raw user input into SQL text.',
-                'Database parses final SQL string as executable query structure.',
-                'Injected operators/comments change query logic.',
-                'Authentication or data boundaries can be bypassed.',
-            ],
-            'why_it_works': 'Databases execute SQL grammar, and string concatenation lets attacker input become part of that grammar.',
+    conn.execute(
+        "INSERT INTO learners (learner_key, display_name, created_at, last_seen_at) VALUES (?, ?, ?, ?)",
+        (learner_key, learner_name, utc_now(), utc_now()),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify(
+        {
+            "ok": True,
+            "learner_key": learner_key,
+            "display_name": learner_name,
+            "message": "Welcome! Your learning profile has been created.",
+            "is_returning": False,
         }
-
-    return {
-        'username': username,
-        'password': password,
-        'analysis': analysis,
-    }
+    )
 
 
-def _tutorial_scraping_context() -> dict:
-    data_exposure = 'semi-public'
-    request_volume = 300
-    has_auth = False
-    has_rate_limit = False
-    has_bot_detection = False
-    endpoint_granularity = 'fine-grained'
-    analysis = None
+@app.route("/api/challenge/progress")
+def api_challenge_progress() -> Any:
+    conn = get_connection()
+    lessons = conn.execute("SELECT slug, title, objective FROM lessons ORDER BY sequence_no").fetchall()
 
-    if request.method == 'POST':
-        data_exposure = request.form.get('data_exposure', 'semi-public')
-        request_volume = int(request.form.get('request_volume', '300') or '300')
-        has_auth = request.form.get('has_auth') == 'on'
-        has_rate_limit = request.form.get('has_rate_limit') == 'on'
-        has_bot_detection = request.form.get('has_bot_detection') == 'on'
-        endpoint_granularity = request.form.get('endpoint_granularity', 'fine-grained')
+    progress = []
+    passed_count = 0
+    for lesson in lessons:
+        agg = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS attempts,
+                COALESCE(MAX(score), 0) AS best_score,
+                COALESCE(MAX(passed), 0) AS has_pass
+            FROM challenge_submissions
+            WHERE lesson_slug = ?
+            """,
+            (lesson["slug"],),
+        ).fetchone()
 
-        exposure_points = {
-            'public': 10,
-            'semi-public': 25,
-            'sensitive': 45,
+        passed = bool(agg["has_pass"])
+        if passed:
+            passed_count += 1
+
+        progress.append(
+            {
+                "slug": lesson["slug"],
+                "title": lesson["title"],
+                "objective": lesson["objective"],
+                "attempts": int(agg["attempts"]),
+                "best_score": int(agg["best_score"]),
+                "passed": passed,
+            }
+        )
+
+    conn.close()
+    total = len(progress)
+    completion = round((passed_count / total) * 100) if total else 0
+    return jsonify({"ok": True, "lessons": progress, "completion_rate": completion})
+
+
+@app.route("/api/learner/<learner_key>/progress")
+def api_learner_progress(learner_key: str) -> Any:
+    learner_key = str(learner_key).strip().lower()
+    conn = get_connection()
+
+    learner = conn.execute("SELECT display_name, created_at, last_seen_at FROM learners WHERE learner_key = ?", (learner_key,)).fetchone()
+    if not learner:
+        conn.close()
+        return jsonify({"ok": False, "message": "Learner not found."}), 404
+
+    display_name = learner["display_name"]
+    created_at = learner["created_at"]
+    last_seen_at = learner["last_seen_at"]
+
+    lessons = conn.execute("SELECT slug, title, objective FROM lessons ORDER BY sequence_no").fetchall()
+    progress = []
+    passed_count = 0
+
+    for lesson in lessons:
+        agg = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS attempts,
+                COALESCE(MAX(score), 0) AS best_score,
+                COALESCE(MAX(passed), 0) AS has_pass
+            FROM challenge_submissions
+            WHERE lesson_slug = ? AND learner_key = ?
+            """,
+            (lesson["slug"], learner_key),
+        ).fetchone()
+
+        passed = bool(agg["has_pass"])
+        if passed:
+            passed_count += 1
+
+        progress.append(
+            {
+                "slug": lesson["slug"],
+                "title": lesson["title"],
+                "objective": lesson["objective"],
+                "attempts": int(agg["attempts"]),
+                "best_score": int(agg["best_score"]),
+                "passed": passed,
+            }
+        )
+
+    total = len(progress)
+    completion = round((passed_count / total) * 100) if total else 0
+
+    submissions = conn.execute(
+        """
+        SELECT lesson_slug, score, passed, feedback, created_at, learner_name
+        FROM challenge_submissions WHERE learner_key = ? ORDER BY created_at DESC LIMIT 50
+        """,
+        (learner_key,),
+    ).fetchall()
+
+    submission_history = [
+        {
+            "lesson_slug": s["lesson_slug"],
+            "score": s["score"],
+            "passed": bool(s["passed"]),
+            "feedback": s["feedback"],
+            "created_at": s["created_at"],
+            "learner_name": s["learner_name"],
         }
-        volume_points = 8
-        if request_volume > 1000:
-            volume_points = 25
-        elif request_volume > 500:
-            volume_points = 18
-        elif request_volume > 250:
-            volume_points = 12
+        for s in submissions
+    ]
 
-        granularity_points = 8 if endpoint_granularity == 'fine-grained' else 2
-        control_reduction = 0
-        if has_auth:
-            control_reduction += 20
-        if has_rate_limit:
-            control_reduction += 15
-        if has_bot_detection:
-            control_reduction += 12
+    conn.close()
 
-        risk_score = max(0, min(100, exposure_points[data_exposure] + volume_points + granularity_points - control_reduction))
-        if risk_score >= 65:
-            risk_level = 'High'
-        elif risk_score >= 35:
-            risk_level = 'Medium'
-        else:
-            risk_level = 'Low'
-
-        estimated_records = request_volume * (4 if endpoint_granularity == 'fine-grained' else 1)
-        analysis = {
-            'risk_score': risk_score,
-            'risk_level': risk_level,
-            'estimated_records': estimated_records,
-            'why_it_works': [
-                'Scrapers automate requests faster than humans.',
-                'Predictable HTML/JSON structure makes parsing cheap.',
-                'No auth/rate controls means low-cost bulk extraction.',
-            ],
-            'defensive_notes': [
-                'Require auth for sensitive fields.',
-                'Apply per-user and per-IP rate limiting.',
-                'Track unusual request patterns and rotate keys/tokens.',
-            ],
+    return jsonify(
+        {
+            "ok": True,
+            "learner_key": learner_key,
+            "display_name": display_name,
+            "created_at": created_at,
+            "last_seen_at": last_seen_at,
+            "lessons": progress,
+            "completion_rate": completion,
+            "submission_history": submission_history,
         }
-
-    return {
-        'data_exposure': data_exposure,
-        'request_volume': request_volume,
-        'has_auth': has_auth,
-        'has_rate_limit': has_rate_limit,
-        'has_bot_detection': has_bot_detection,
-        'endpoint_granularity': endpoint_granularity,
-        'analysis': analysis,
-    }
+    )
 
 
-def _tutorial_wrapup_context() -> dict:
-    answers = {
-        'q1': '',
-        'q2': '',
-        'q3': '',
-    }
-    result = None
+@app.route("/api/admin/meta")
+def api_admin_meta() -> Any:
+    return jsonify({"ok": True, "tables": ADMIN_TABLES})
 
-    if request.method == 'POST':
-        answers['q1'] = request.form.get('q1', '')
-        answers['q2'] = request.form.get('q2', '')
-        answers['q3'] = request.form.get('q3', '')
 
-        key = {
-            'q1': 'escape-output',
-            'q2': 'parameterized',
-            'q3': 'rate-limit',
+@app.route("/api/admin/stats")
+def api_admin_stats() -> Any:
+    conn = get_connection()
+    table_counts = {}
+    for table_name in ADMIN_TABLES:
+        total = conn.execute(f"SELECT COUNT(*) AS total FROM {table_name}").fetchone()["total"]
+        table_counts[table_name] = int(total)
+
+    challenge_agg = conn.execute(
+        "SELECT COUNT(*) AS total, COALESCE(SUM(passed), 0) AS passed_total FROM challenge_submissions"
+    ).fetchone()
+    total = int(challenge_agg["total"])
+    passed_total = int(challenge_agg["passed_total"])
+    pass_rate = round((passed_total / total) * 100) if total else 0
+
+    flagged_comments = conn.execute(
+        "SELECT COUNT(*) AS total FROM comments WHERE is_flagged = 1"
+    ).fetchone()["total"]
+    conn.close()
+
+    return jsonify(
+        {
+            "ok": True,
+            "table_counts": table_counts,
+            "challenge_pass_rate": pass_rate,
+            "flagged_comments": int(flagged_comments),
         }
-        score = sum(1 for q, correct in key.items() if answers[q] == correct)
-        result = {
-            'score': score,
-            'total': 3,
-            'message': 'Great job. You have a strong grasp of the concepts.' if score == 3 else 'Good progress. Review the incorrect answers and retest.',
-        }
-
-    return {
-        'answers': answers,
-        'result': result,
-    }
-
-@app.route('/')
-def home():
-    tutorial = _get_tutorial_state()
-    return render_template('home.html', active_page='home', tutorial=tutorial)
+    )
 
 
-@app.route('/tutorial')
-def tutorial_index():
-    tutorial = _get_tutorial_state()
-    steps = []
-    for step in TUTORIAL_STEPS:
-        steps.append({
-            **step,
-            'url': url_for('tutorial_step', step_id=step['id']),
-            'visited': step['id'] in tutorial['visited'],
-        })
-    return render_template('tutorial.html', active_page='tutorial', tutorial=tutorial, steps=steps)
+@app.route("/api/admin/rows")
+def api_admin_rows() -> Any:
+    table = request.args.get("table", "users").strip().lower()
+    if table not in ADMIN_TABLES:
+        return jsonify({"ok": False, "message": "Unknown table."}), 400
+
+    search = request.args.get("search", "").strip()
+    filter_column = request.args.get("filter_column", "").strip()
+    filter_value = request.args.get("filter_value", "").strip()
+    sort_by = request.args.get("sort_by", ADMIN_TABLES[table]["columns"][0]).strip()
+    sort_dir = request.args.get("sort_dir", "asc").strip().lower()
+    page = _safe_int(request.args.get("page"), 1, 1, 500)
+    per_page = _safe_int(request.args.get("per_page"), 10, 1, 100)
+
+    data = _admin_query_rows(
+        table=table,
+        search=search,
+        filter_column=filter_column,
+        filter_value=filter_value,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        page=page,
+        per_page=per_page,
+    )
+    data["ok"] = True
+    return jsonify(data)
 
 
-@app.route('/tutorial/reset', methods=['POST'])
-def tutorial_reset():
-    session.pop('tutorial_visited', None)
-    return redirect(url_for('tutorial_index'))
+@app.route("/api/terminal/execute", methods=["POST"])
+def api_terminal_execute() -> Any:
+    data = request.get_json(force=True)
+    tool = str(data.get("tool", "sqli")).strip().lower() or "sqli"
+    command = str(data.get("command", "")).strip()
+
+    if tool not in TERMINAL_TOOLS:
+        return jsonify({"ok": False, "message": "Unknown tool profile."}), 400
+
+    result = _execute_terminal_command(tool, command)
+    summary = " | ".join(result.get("lines", [])[:3])
+    log_activity(tool, command, bool(result.get("ok")), summary)
+
+    status = 200 if result.get("ok") else 400
+    return jsonify(result), status
 
 
-@app.route('/tutorial/<step_id>', methods=['GET', 'POST'])
-def tutorial_step(step_id: str):
-    step_index = _get_step_index(step_id)
-    if step_index < 0:
-        return redirect(url_for('tutorial_index'))
-
-    _mark_step_visited(step_id)
-    tutorial = _get_tutorial_state()
-
-    prev_step = TUTORIAL_STEPS[step_index - 1]['id'] if step_index > 0 else None
-    next_step = TUTORIAL_STEPS[step_index + 1]['id'] if step_index < len(TUTORIAL_STEPS) - 1 else None
-
-    base_ctx = {
-        'active_page': 'tutorial',
-        'tutorial': tutorial,
-        'step_id': step_id,
-        'step_index': step_index,
-        'step_title': TUTORIAL_STEPS[step_index]['title'],
-        'step_subtitle': TUTORIAL_STEPS[step_index]['subtitle'],
-        'prev_step_url': url_for('tutorial_step', step_id=prev_step) if prev_step else None,
-        'next_step_url': url_for('tutorial_step', step_id=next_step) if next_step else None,
-    }
-
-    if step_id == 'intro':
-        return render_template('tutorial_intro.html', **base_ctx)
-    if step_id == 'xss':
-        ctx = _tutorial_xss_context()
-        return render_template('tutorial_xss.html', **base_ctx, **ctx)
-    if step_id == 'sqli':
-        ctx = _tutorial_sqli_context()
-        return render_template('tutorial_sqli.html', **base_ctx, **ctx)
-    if step_id == 'scraping':
-        ctx = _tutorial_scraping_context()
-        return render_template('tutorial_scraping.html', **base_ctx, **ctx)
-    if step_id == 'wrapup':
-        ctx = _tutorial_wrapup_context()
-        return render_template('tutorial_wrapup.html', **base_ctx, **ctx)
-
-    return redirect(url_for('tutorial_index'))
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    _db_ready = True
+    init_db()
+    debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
+    app.run(host="127.0.0.1", port=5000, debug=debug_mode)
+'''

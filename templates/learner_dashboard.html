@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="learner-dashboard">
+  <!-- Learner Identity Section -->
+  <section class="learner-identity-card">
+    <div class="identity-content">
+      <h2>Your Learning Profile</h2>
+      <div class="identity-form">
+        <input type="text" id="learner-name-input" placeholder="Enter your name" maxlength="60" />
+        <button id="register-learner-btn" class="btn btn-primary">Start Learning</button>
+      </div>
+      <div id="learner-identity-display" style="display:none;">
+        <p><strong>Name:</strong> <span id="display-name"></span></p>
+        <p><strong>Profile ID:</strong> <code id="display-key"></code></p>
+        <p><strong>Joined:</strong> <span id="display-created"></span></p>
+        <button id="switch-learner-btn" class="btn btn-secondary">Switch Learner</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progress Overview -->
+  <section id="progress-section" style="display:none;">
+    <h3>Your Progress</h3>
+    <div class="progress-stats">
+      <div class="stat-card">
+        <div class="stat-label">Completion</div>
+        <div class="stat-value"><span id="completion-rate">0</span>%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Lessons Passed</div>
+        <div class="stat-value"><span id="passed-count">0</span>/<span id="total-lessons">0</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Attempts</div>
+        <div class="stat-value"><span id="total-attempts">0</span></div>
+      </div>
+    </div>
+
+    <!-- Lesson Progress Cards -->
+    <div class="lessons-grid" id="learner-lessons-grid">
+      <!-- Populated by JavaScript -->
+    </div>
+  </section>
+
+  <!-- Submission History -->
+  <section id="history-section" style="display:none;">
+    <h3>Your Submission History</h3>
+    <div class="submission-filters">
+      <input type="text" id="history-search" placeholder="Search by lesson or feedback..." />
+      <select id="history-sort">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="highest-score">Highest Score</option>
+        <option value="lowest-score">Lowest Score</option>
+      </select>
+    </div>
+    <div class="submission-list" id="submission-list">
+      <!-- Populated by JavaScript -->
+    </div>
+  </section>
+</div>
+
+<style>
+.learner-dashboard {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.learner-identity-card {
+  background: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.identity-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--primary, #333);
+}
+
+.identity-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.identity-form input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.identity-form .btn {
+  padding: 0.75rem 1.5rem;
+}
+
+#learner-identity-display {
+  background: var(--ok-bg, #e8f5e9);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+#learner-identity-display p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+#learner-identity-display code {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.stat-card {
+  background: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted, #666);
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary, #333);
+}
+
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.lesson-progress-card {
+  background: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-progress-card h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.lesson-progress-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+  margin: 0.3rem 0;
+}
+
+.lesson-score {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+  color: var(--primary, #333);
+}
+
+.lesson-status {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.lesson-status.passed {
+  background: var(--ok-bg, #e8f5e9);
+  color: var(--ok, #2e7d32);
+}
+
+.lesson-status.in-progress {
+  background: var(--warn-bg, #fff3e0);
+  color: var(--warn, #f57c00);
+}
+
+.submission-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.submission-filters input,
+.submission-filters select {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.submission-filters input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.submission-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.submission-item {
+  background: var(--card-bg, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.submission-header h5 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.submission-score {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--primary, #333);
+}
+
+.submission-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+  margin-bottom: 0.75rem;
+}
+
+.submission-feedback {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+  border-left: 3px solid var(--primary, #333);
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary, #333);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark, #222);
+}
+
+.btn-secondary {
+  background: var(--secondary, #666);
+  color: white;
+  margin-top: 1rem;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-dark, #555);
+}
+
+@media (max-width: 768px) {
+  .identity-form {
+    flex-direction: column;
+  }
+
+  .progress-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .lessons-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-filters {
+    flex-direction: column;
+  }
+
+  .submission-filters input,
+  .submission-filters select {
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+let currentLearnerKey = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if learner is already registered (from session storage)
+  const savedLearnerKey = sessionStorage.getItem("learner_key");
+  if (savedLearnerKey) {
+    currentLearnerKey = savedLearnerKey;
+    loadLearnerDashboard(savedLearnerKey);
+    showLearnerIdentity(sessionStorage.getItem("learner_name"), savedLearnerKey);
+  }
+
+  // Register learner button
+  document.getElementById("register-learner-btn").addEventListener("click", registerLearner);
+
+  // Switch learner button
+  document.getElementById("switch-learner-btn").addEventListener("click", switchLearner);
+
+  // History filtering
+  document.getElementById("history-search").addEventListener("input", filterSubmissions);
+  document.getElementById("history-sort").addEventListener("change", sortSubmissions);
+});
+
+async function registerLearner() {
+  const nameInput = document.getElementById("learner-name-input");
+  const learnerName = nameInput.value.trim();
+
+  if (!learnerName || learnerName.length < 2) {
+    alert("Please enter a name with at least 2 characters.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/learner/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ learner_name: learnerName }),
+    });
+
+    const data = await response.json();
+    if (data.ok) {
+      currentLearnerKey = data.learner_key;
+      sessionStorage.setItem("learner_key", data.learner_key);
+      sessionStorage.setItem("learner_name", data.display_name);
+
+      nameInput.value = "";
+      showLearnerIdentity(data.display_name, data.learner_key);
+      loadLearnerDashboard(data.learner_key);
+
+      if (data.message) {
+        alert(data.message);
+      }
+    } else {
+      alert("Error: " + (data.message || "Failed to register"));
+    }
+  } catch (err) {
+    console.error("Registration error:", err);
+    alert("Error registering learner. Please try again.");
+  }
+}
+
+function showLearnerIdentity(name, key) {
+  document.getElementById("learner-name-input").style.display = "none";
+  document.getElementById("register-learner-btn").style.display = "none";
+  document.getElementById("learner-identity-display").style.display = "block";
+  document.getElementById("display-name").textContent = name;
+  document.getElementById("display-key").textContent = key;
+
+  const date = new Date().toLocaleDateString();
+  document.getElementById("display-created").textContent = date;
+}
+
+function switchLearner() {
+  sessionStorage.removeItem("learner_key");
+  sessionStorage.removeItem("learner_name");
+  currentLearnerKey = null;
+  location.reload();
+}
+
+async function loadLearnerDashboard(learnerKey) {
+  try {
+    const response = await fetch(`/api/learner/${learnerKey}/progress`);
+    const data = await response.json();
+
+    if (data.ok) {
+      // Update stats
+      document.getElementById("completion-rate").textContent = data.completion_rate;
+      const passedCount = data.lessons.filter((l) => l.passed).length;
+      document.getElementById("passed-count").textContent = passedCount;
+      document.getElementById("total-lessons").textContent = data.lessons.length;
+      document.getElementById("total-attempts").textContent = data.total_attempts || 0;
+
+      // Render lesson cards
+      const lessonsGrid = document.getElementById("learner-lessons-grid");
+      lessonsGrid.innerHTML = data.lessons
+        .map(
+          (lesson) => `
+        <div class="lesson-progress-card">
+          <h4>${lesson.title}</h4>
+          <p>${lesson.objective}</p>
+          <div class="lesson-score">${lesson.best_score}%</div>
+          <p>Attempts: ${lesson.attempts}</p>
+          <span class="lesson-status ${lesson.passed ? "passed" : "in-progress"}">
+            ${lesson.passed ? "✓ Passed" : "In Progress"}
+          </span>
+        </div>
+      `
+        )
+        .join("");
+
+      // Render submission history
+      const submissionList = document.getElementById("submission-list");
+      if (data.submission_history && data.submission_history.length > 0) {
+        submissionList.innerHTML = data.submission_history
+          .map(
+            (sub) => `
+          <div class="submission-item" data-lesson="${sub.lesson_slug}" data-score="${sub.score}" data-created="${sub.created_at}">
+            <div class="submission-header">
+              <h5>${sub.lesson_slug.toUpperCase()}</h5>
+              <div class="submission-score">${sub.score}%</div>
+            </div>
+            <div class="submission-meta">Submitted: ${new Date(sub.created_at).toLocaleString()}</div>
+            <div class="submission-feedback">
+              <strong>Feedback:</strong> ${sub.feedback || "No feedback"}
+            </div>
+          </div>
+        `
+          )
+          .join("");
+      } else {
+        submissionList.innerHTML = '<p style="color: var(--text-muted, #666);">No submissions yet.</p>';
+      }
+
+      // Show sections
+      document.getElementById("progress-section").style.display = "block";
+      document.getElementById("history-section").style.display = "block";
+    } else {
+      console.error("Failed to load progress:", data.message);
+    }
+  } catch (err) {
+    console.error("Error loading dashboard:", err);
+  }
+}
+
+function filterSubmissions() {
+  const query = document.getElementById("history-search").value.toLowerCase();
+  const items = document.querySelectorAll(".submission-item");
+
+  items.forEach((item) => {
+    const lesson = item.getAttribute("data-lesson");
+    const feedback = item.querySelector(".submission-feedback").textContent.toLowerCase();
+    const matches = lesson.includes(query) || feedback.includes(query);
+    item.style.display = matches ? "block" : "none";
+  });
+}
+
+function sortSubmissions() {
+  const sortOrder = document.getElementById("history-sort").value;
+  const list = document.getElementById("submission-list");
+  const items = Array.from(list.querySelectorAll(".submission-item"));
+
+  items.sort((a, b) => {
+    const scoreA = parseInt(a.getAttribute("data-score"));
+    const scoreB = parseInt(b.getAttribute("data-score"));
+    const createdA = new Date(a.getAttribute("data-created"));
+    const createdB = new Date(b.getAttribute("data-created"));
+
+    switch (sortOrder) {
+      case "newest":
+        return createdB - createdA;
+      case "oldest":
+        return createdA - createdB;
+      case "highest-score":
+        return scoreB - scoreA;
+      case "lowest-score":
+        return scoreA - scoreB;
+      default:
+        return 0;
+    }
+  });
+
+  list.innerHTML = "";
+  items.forEach((item) => list.appendChild(item));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="panel reveal">
+  <p class="kicker">Mission 2</p>
+  <h1>XSS: compare what runs vs what is shown as text</h1>
+  <p>
+    XSS happens when untrusted content is injected into page HTML. In this lesson, you store comments,
+    switch rendering modes, and explain why escaping changes the outcome.
+  </p>
+</section>
+
+<section class="split reveal stagger">
+  <article class="panel">
+    <h2>Post a Comment</h2>
+    <form id="xss-post-form" class="stack-form">
+      <label>Author</label>
+      <input name="author" value="Student" />
+      <label>Content</label>
+      <textarea name="content" rows="4" placeholder="Try plain text first, then HTML/script-like input."></textarea>
+      <button class="btn" type="submit">Store Comment</button>
+    </form>
+    <p class="hint-line">
+      Tip: compare the same stored comment in unsafe and safe mode.
+    </p>
+  </article>
+
+  <article class="panel">
+    <h2>Rendered Board</h2>
+    <div class="action-row">
+      <button class="btn" data-xss-mode="unsafe" type="button">Unsafe Render</button>
+      <button class="btn ghost" data-xss-mode="safe" type="button">Safe Render</button>
+    </div>
+    <p id="xss-mode-status" class="status-line"></p>
+    <div id="xss-board" class="comment-board"></div>
+  </article>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Command Terminal</h2>
+  <div class="terminal-shell" id="xss-shell" data-tool="xss">
+    <div class="terminal-output"></div>
+    <div class="terminal-input-row">
+      <span class="prompt">xss$</span>
+      <input class="terminal-input" placeholder="help" />
+      <button class="btn terminal-run" type="button">Run</button>
+      <button class="btn ghost terminal-clear" type="button">Clear</button>
+    </div>
+  </div>
+  <div class="chip-row">
+    <button
+      class="chip"
+      data-terminal-target="xss-shell"
+      data-command="post-comment --author &quot;Student&quot; --content &quot;&lt;script&gt;alert(1)&lt;/script&gt;&quot;"
+    >
+      Store Script-Like Input
+    </button>
+    <button class="chip" data-terminal-target="xss-shell" data-command="render --mode unsafe">Render Unsafe</button>
+    <button class="chip" data-terminal-target="xss-shell" data-command="render --mode safe">Render Safe</button>
+  </div>
+</section>
+
+<section class="panel reveal stagger">
+  <h2>Show You Understand</h2>
+  <form class="challenge-form" data-lesson="xss">
+    <label>Your name</label>
+    <input name="learner_name" placeholder="Your name" />
+    <label>Your explanation</label>
+    <textarea
+      name="answer"
+      rows="5"
+      placeholder="Explain why unsafe render can execute browser code while safe render displays characters literally."
+    ></textarea>
+    <button class="btn" type="submit">Submit Reflection</button>
+    <p class="challenge-result"></p>
+  </form>
+</section>
+{% endblock %}
